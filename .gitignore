@@ -4,3 +4,6 @@
 *.ttf
 *.log
 .idea
+build/bin
+node_modules
+frontend/dist
