@@ -1,6 +1,6 @@
 package dto
 
-type KWResp struct {
+type KWSearchResp struct {
 	ARTISTPIC     string    `json:"ARTISTPIC"`
 	HIT           string    `json:"HIT"`
 	HITMODE       string    `json:"HITMODE"`
@@ -15,21 +15,25 @@ type KWResp struct {
 	Abslist       []Abslist `json:"abslist"`
 	Searchgroup   string    `json:"searchgroup"`
 }
+
 type Audiobookpayinfo struct {
 	Download string `json:"download"`
 	Play     string `json:"play"`
 }
+
 type Mvpayinfo struct {
 	Download string `json:"download"`
 	Play     string `json:"play"`
 	Vid      string `json:"vid"`
 }
+
 type FeeType struct {
 	Album   string `json:"album"`
 	Bookvip string `json:"bookvip"`
 	Song    string `json:"song"`
 	Vip     string `json:"vip"`
 }
+
 type Paytagindex struct {
 	AR501   int `json:"AR501"`
 	DB      int `json:"DB"`
@@ -43,6 +47,7 @@ type Paytagindex struct {
 	ZPGA501 int `json:"ZPGA501"`
 	ZPLY    int `json:"ZPLY"`
 }
+
 type PayInfo struct {
 	CannotDownload   string      `json:"cannotDownload"`
 	CannotOnlinePlay string      `json:"cannotOnlinePlay"`
@@ -61,6 +66,7 @@ type PayInfo struct {
 	RefrainStart     string      `json:"refrain_start"`
 	TipsIntercept    string      `json:"tips_intercept"`
 }
+
 type SUBLIST struct {
 	AARTIST           string           `json:"AARTIST"`
 	ALBUM             string           `json:"ALBUM"`
@@ -125,6 +131,7 @@ type SUBLIST struct {
 	WebArtistpicShort string           `json:"web_artistpic_short"`
 	WebTimingonline   string           `json:"web_timingonline"`
 }
+
 type Abslist struct {
 	AARTIST           string           `json:"AARTIST"`
 	ALBUM             string           `json:"ALBUM"`

@@ -29,8 +29,9 @@ func NewKuwoClient() *KuwoClient {
 	client.ArrayMask[len(client.ArrayMask)-1] = -9223372036854775808
 	return client
 }
+
 func (k *KuwoClient) base64Encrypt(str string) string {
-	bs := k.encrypt([]byte(str), []byte(SECRET_KEY))
+	bs := k.encrypt([]byte(str), []byte(KW_SECRET_KEY))
 	str = base64.StdEncoding.EncodeToString(bs)
 	return strings.ReplaceAll(str, "\n", "")
 }
@@ -155,14 +156,14 @@ func KuWwSearchApi(pageNo, pageSize int, key string) string {
 }
 
 // SearchMusic 搜索音乐(实现musicClient interface)
-func (k *KuwoClient) SearchMusic(kw string) *dto.KWResp {
-	api := KuWwSearchApi(0, 10, kw)
+func (k *KuwoClient) SearchMusic(pageNo, pageSize int, kw string) *dto.KWSearchResp {
+	api := KuWwSearchApi(pageNo, pageSize, kw)
 	resp := utils.HttpGetWithHeader(api, KWSearchHead)
 	if resp.Err != nil {
 		panic(resp.Err)
 	}
 	log.Info(string(resp.Data))
-	kwResp := new(dto.KWResp)
+	kwResp := new(dto.KWSearchResp)
 	err := json.Unmarshal(resp.Data, kwResp)
 	if err != nil {
 		panic(err)
@@ -181,7 +182,7 @@ func (k *KuwoClient) GetMusicUrl(mid, quality string) string {
 		quality = "2000kflac"
 	}
 
-	api := NewTrackUrlApi(mid, quality)
+	api := NewKWTrackUrlApi(mid, quality)
 	resp := utils.HttpGetWithHeader(api, KWGetTrackUrlHead)
 	if resp.SetCookie != "" {
 		submatch := re.KWTokenReg.FindAllStringSubmatch(resp.SetCookie, -1)
@@ -213,7 +214,7 @@ func (k *KuwoClient) GetMusicUrl3(mid, quality string) string {
 		quality = "corp=kuwo&p2p=1&type=convert_url2&format=flac&rid=" + mid
 	}
 
-	api := NewTrackUrl3Api(k.base64Encrypt(quality))
+	api := NewKWTrackUrl3Api(k.base64Encrypt(quality))
 	log.Info("api:", api)
 	resp := utils.HttpGetWithHeader(api, KWGetTrackUrlHead)
 	if resp.SetCookie != "" {
@@ -230,22 +231,49 @@ func (k *KuwoClient) GetMusicUrl3(mid, quality string) string {
 	return allString[0]
 }
 
-func NewTrackUrl3Api(key string) string {
-	return fmt.Sprintf(TrackUrl3Api, key)
+// GetMusicUrl3 获取音乐url(实现musicClient interface)
+func (k *KuwoClient) GetLyric(mid string) []dto.Lrclist {
+	api := NewKWLyricApi(mid)
+	resp := utils.HttpGet(api)
+	if resp.Err != nil {
+		log.Error(resp.Err)
+		return nil
+	}
+
+	lyric := new(dto.KWLyricResp)
+	err := json.Unmarshal(resp.Data, lyric)
+	if err != nil {
+		log.Error(err)
+		return nil
+	}
+
+	if lyric.Code != 200 {
+		return nil
+	}
+	return lyric.Data.Lrclist
 }
 
-func NewTrackUrlApi(mid, param string) string {
-	return fmt.Sprintf(TrackUrlApi, mid, param)
+func NewKWTrackUrl3Api(key string) string {
+	return fmt.Sprintf(KWTrackUrl3Api, key)
+}
+
+func NewKWTrackUrlApi(mid, param string) string {
+	return fmt.Sprintf(KWTrackUrlApi, mid, param)
+}
+
+func NewKWLyricApi(mid string) string {
+	return fmt.Sprintf(KWLyricApi, mid)
 }
 
 const (
-	SECRET_KEY = "ylzsxkwm"
+	KW_SECRET_KEY = "ylzsxkwm"
 
 	DES_MODE_DECRYPT int = 1
 
-	KWSearchApi  = "https://search.kuwo.cn/r.s?pn=%d&rn=%d&all=%s&ft=music&newsearch=1&alflac=1&itemset=web_2013&client=kt&cluster=0&vermerge=1&rformat=json&encoding=utf8&show_copyright_off=1&pcmp4=1&ver=mbox&plat=pc&vipver=MUSIC_9.2.0.0_W6&devid=11404450&newver=1&issubtitle=1&pcjson=1"
-	TrackUrl3Api = "http://nmobi.kuwo.cn/mobi.s?f=kuwo&q=%s"
-	TrackUrlApi  = "https://mobi.kuwo.cn/mobi.s?f=web&source=kwplayer_ar_5.1.0.0_B_jiakong_vh.apk&type=convert_url_with_sign&rid=%s&br=%s"
+	KWSearchApi    = "https://search.kuwo.cn/r.s?pn=%d&rn=%d&all=%s&ft=music&newsearch=1&alflac=1&itemset=web_2013&client=kt&cluster=0&vermerge=1&rformat=json&encoding=utf8&show_copyright_off=1&pcmp4=1&ver=mbox&plat=pc&vipver=MUSIC_9.2.0.0_W6&devid=11404450&newver=1&issubtitle=1&pcjson=1"
+	KWTrackUrl3Api = "http://nmobi.kuwo.cn/mobi.s?f=kuwo&q=%s"
+	KWTrackUrlApi  = "https://mobi.kuwo.cn/mobi.s?f=web&source=kwplayer_ar_5.1.0.0_B_jiakong_vh.apk&type=convert_url_with_sign&rid=%s&br=%s"
+	KWLyricApi     = "https://kuwo.cn/openapi/v1/www/lyric/getlyric?musicId=%s"
 )
 
 var (
